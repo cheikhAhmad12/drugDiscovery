@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import List, Tuple
-
 import torch
 from torch_geometric.datasets import MoleculeNet
 from torch_geometric.loader import DataLoader
@@ -8,17 +7,25 @@ from sklearn.model_selection import train_test_split
 
 from .featurize import smiles_to_pyg
 
-def load_esol(root: str = "data") -> List:
-    base = MoleculeNet(root=root, name="ESOL")  # fournit data + smiles
+def load_moleculenet(name: str, root: str = "data") -> List:
+    name = name.upper()
+    base = MoleculeNet(root=root, name=name)
     data_list = []
     for d in base:
         smiles = getattr(d, "smiles", None)
         if smiles is None:
             continue
-        y = float(d.y.item())
-        pyg = smiles_to_pyg(smiles, y)
-        if pyg is not None:
-            data_list.append(pyg)
+
+        # y: ESOL [1], HIV [1], TOX21 [12] (peut contenir NaN)
+        y = d.y.detach().cpu().float()
+
+        # on passe y temporaire dans Data puis on l’écrase
+        pyg = smiles_to_pyg(smiles, y=0.0)
+        if pyg is None:
+            continue
+        pyg.y = y
+        pyg.smiles = smiles
+        data_list.append(pyg)
     return data_list
 
 def split_loaders(data_list, batch_size=64, seed=42):
