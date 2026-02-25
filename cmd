@@ -12,3 +12,9 @@ python -m src.train --dataset HIV --arch mpnn
 python -m src.train --dataset TOX21 --arch gcn
 python -m src.train --dataset TOX21 --arch gat
 python -m src.train --dataset TOX21 --arch mpnn
+
+
+
+
+python -m src.train --dataset TOX21 --arch gcn --seed 42
+streamlit run app/streamlit_app.py
